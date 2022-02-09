@@ -1,0 +1,35 @@
+object Form1: TForm1
+  Left = 246
+  Height = 240
+  Top = 250
+  Width = 386
+  Caption = 'Form1'
+  ClientHeight = 240
+  ClientWidth = 386
+  OnCreate = FormCreate
+  OnDestroy = FormDestroy
+  object StatusBar1: TStatusBar
+    Left = 0
+    Height = 20
+    Top = 220
+    Width = 386
+    Panels = <>
+  end
+  object Label1: TLabel
+    Left = 8
+    Height = 13
+    Top = 184
+    Width = 31
+    Caption = 'Label1'
+  end
+  object AdvLed1: TAdvLed
+    Left = 352
+    Height = 24
+    Top = 144
+    Width = 24
+    Kind = lkGreenLight
+    State = lsOff
+    Blink = False
+    Showhint = True
+  end
+end
