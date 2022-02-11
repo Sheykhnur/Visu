@@ -26,6 +26,10 @@
 //                                                                                                                                     ///
 // 07.09.2010 ChristophC: AnsiString/WideString/Char/PChar compatibility problem in newer Delphi version solved                        ///
 //                                                                                                                                     ///
+// 09.02.2022 SheykhnurL: Adapted to build in modern versions of the Free Pascal compiler with ObjFPC mode.                            ///
+//                                                                                                                                     ///
+// This file is taken from https://infosys.beckhoff.com/ and is provided as is. Any use must be approved by Beckhoff Automation GmbH!  ///
+//                                                                                                                                     ///
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 

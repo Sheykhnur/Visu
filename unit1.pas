@@ -6,7 +6,7 @@ interface
 
 uses
   Classes, SysUtils, Forms, Controls, Messages, Windows, Graphics, Dialogs,
-  ComCtrls, StdCtrls, AdvLed, TcAdsAPI, TcAdsDef;
+  ComCtrls, StdCtrls, Crt, AdvLed, TcAdsAPI, TcAdsDef;
 
 const WM_ADSDEVICENOTIFICATION = WM_APP + 401;
 
@@ -22,14 +22,16 @@ type
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
     procedure WMAdsDeviceNotification( var Message: TMessage ); message WM_ADSDEVICENOTIFICATION;
+
   private
     LocalAddr     :TAmsAddr;
     ServerAddr    :TAmsAddr;
     hNotification :DWORD;
-  public
 
+  public
   end;
 
+procedure AdsRouterCallback( nEvent:Longint ); stdcall;
 
 {$ALIGN OFF}
 type TThreadListItem = record
@@ -104,6 +106,7 @@ begin
 
            cbData :=Min(pItem^.cbSize, sizeof(adsState));
            System.Move( pItem^.data, adsState, cbData );
+           AdvLed1.State := LsOn;
            case adsState of
                 ADSSTATE_STOP:  begin
                                      sState := 'STOP';
@@ -116,11 +119,6 @@ begin
                                      AdvLed1.Kind := lkGreenLight;
                                      AdvLed1.Hint := 'PLC is running';
                 end;
-
-                ADSSTATE_CONFIG: begin
-                                      sState := 'CONFIG';
-                                      AdvLed1.Kind := ;
-                End;
            else
                 sState := Format('Other: %d', [adsState]);
            end;
@@ -152,7 +150,7 @@ begin
   DevThreadList                        := TThreadList.Create();
   adsNotificationAttrib.cbLength       := sizeof(DWORD);
   adsNotificationAttrib.nTransMode     := ADSTRANS_SERVERONCHA;
-  adsNotificationAttrib.nMaxDelay      := 0;
+  adsNotificationAttrib.nMaxDelay      := 0; // set notification immediately
   adsNotificationAttrib.nCycleTime     := 0;
   ClientPort:= AdsPortOpen();
   if ClientPort = 0 then {error!}
@@ -175,14 +173,52 @@ begin
 
 
     hUser := 7;
-    AdsResult:=AdsSyncAddDeviceNotificationReq( @ServerAddr,
+
+    AdsResult := AdsAmsRegisterRouterNotification(pointer(@AdsRouterCallback));
+    if AdsResult > 0 then
+       Label1.Caption := Format('AdsAmsRegisterRouterNotification() error:%d', [AdsResult]);
+
+    {AdsResult := AdsSyncAddDeviceNotificationReq( @ServerAddr,
                       ADSIGRP_DEVICE_DATA,
                       ADSIOFFS_DEVDATA_ADSSTATE,
                       @adsNotificationAttrib,
                       pointer(@AdsDeviceCallback), hUser, @hNotification  );
     if AdsResult > 0 then
-      ShowMessageFmt('AdsSyncAddDeviceNotificationReq() error:%d', [AdsResult]);
+      Label1.Caption := Format('AdsSyncAddDeviceNotificationReq() error:%d', [AdsResult]);}
   end;
+end;
+
+procedure AdsRouterCallback( nEvent:Longint ); stdcall;
+var result                :Longint;
+    AdsResult             :Longint;
+    adsState, devState    :Word;
+    adsNotificationAttrib :TadsNotificationAttrib;
+    huser                 :Longword;
+
+begin
+     adsState := 0;
+     devState := 0;
+     adsNotificationAttrib.cbLength       := sizeof(DWORD);
+     adsNotificationAttrib.nTransMode     := ADSTRANS_SERVERONCHA;
+     adsNotificationAttrib.nMaxDelay      := 0; // set notification immediately
+     adsNotificationAttrib.nCycleTime     := 0;
+
+     Delay(1000); //Wait 1 second for start router
+     result := AdsSyncReadStateReq( @Form1.ServerAddr, @adsState, @devState);
+     Form1.Label1.Caption := Format('AdsSyncReadStateReq() result: %d [0x%x]',[result,result] );
+
+     hUser := 7;
+     if result = 0 then
+        Begin
+           AdsResult := AdsSyncAddDeviceNotificationReq( @Form1.ServerAddr,
+                      ADSIGRP_DEVICE_DATA,
+                      ADSIOFFS_DEVDATA_ADSSTATE,
+                      @adsNotificationAttrib,
+                      pointer(@AdsDeviceCallback), hUser, @Form1.hNotification  );
+
+          if AdsResult > 0 then
+             Form1.Label1.Caption := Format('AdsSyncAddDeviceNotificationReq() error:%d', [AdsResult]);
+        end;
 end;
 
 procedure TForm1.FormDestroy(Sender: TObject);

@@ -8,6 +8,7 @@ object Form1: TForm1
   ClientWidth = 386
   OnCreate = FormCreate
   OnDestroy = FormDestroy
+  LCLVersion = '2.2.0.4'
   object StatusBar1: TStatusBar
     Left = 0
     Height = 20
@@ -27,7 +28,6 @@ object Form1: TForm1
     Height = 24
     Top = 144
     Width = 24
-    Kind = lkBulb
     State = lsDisabled
     Blink = False
     Showhint = True
